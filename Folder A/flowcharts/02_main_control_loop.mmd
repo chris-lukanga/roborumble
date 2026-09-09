@@ -1,40 +1,45 @@
 flowchart TD
-  A([Loop entry]) --> B{"5 ms elapsed<br/>since last step?"}
+
+  A([Loop entry]) --> B{"5 ms elapsed since last step?"}
   B -->|no| Z([return - non-blocking])
-  B -->|yes| C["dt = now - last<br/>latch timestamp"]
+  B -->|yes| C["dt = now - last latch timestamp"]
 
-  C --> D["SENSE<br/>read A0..A4"]
-  D --> E["Normalise each channel<br/>n = (raw - MIN) / (MAX - MIN)"]
-  E --> F["Discard n &lt; 0.45 as floor<br/>square the remainder"]
-  F --> G{"total weight<br/>&gt;= 0.35 ?"}
+  C --> D["SENSE - read A0..A4"]
+  D --> E["Normalise each channel - n = (raw - MIN) / (MAX - MIN)"]
+  E --> F["Discard n < 0.45 as floor - square the remainder"]
+  F --> G{"total weight >= 0.35?"}
 
-  G -->|no| LOST["LINE LOST branch<br/>see 04_line_loss_recovery"]
-  G -->|yes| H["FUSE<br/>e = SUM(w.x) / SUM(w)  [m]"]
+  G -->|no| LOST["LINE LOST branch - see 04_line_loss_recovery"]
+  G -->|yes| H["FUSE - e = SUM(w.x) / SUM(w) [m]"]
 
-  H --> I["D term<br/>filtered, alpha = 0.30"]
-  I --> J["I term<br/>clamped to +/- 1.5"]
-  J --> K["k = Kp.e + Ki.integral + Kd.d<br/>clamp to +/- 14 1/m"]
+  H --> I["D term - filtered, alpha = 0.30"]
+  I --> J["I term - clamped to +/- 1.5"]
+  J --> K["k = Kp.e + Ki.integral + Kd.d - clamp to +/- 14 1/m"]
 
-  K --> L["SPEED SCHEDULE<br/>v_wheel = Vmax / (1 + |k|.b/2)<br/>v_curve = 0.52 / (1 + 0.075|k|)"]
-  L --> M["v = min(V_STRAIGHT, v_wheel, v_curve)<br/>floored at 0.16 m/s"]
+  K --> L["SPEED SCHEDULE - v_wheel = Vmax / (1 + |k|.b/2) - v_curve = 0.52 / (1 + 0.075|k|)"]
+  L --> M["v = min(V_STRAIGHT, v_wheel, v_curve) - floored at 0.16 m/s"]
 
-  M --> N["Slew limit<br/>dv &lt;= 2.2 m/s2<br/>dk &lt;= 90 (1/m)/s"]
+  M --> N["Slew limit - dv <= 2.2 m/s2 - dk <= 90 (1/m)/s"]
   LOST --> N
 
-  N --> O["KINEMATICS<br/>vL = v(1 - kb/2)<br/>vR = v(1 + kb/2)"]
-  O --> P{"either wheel<br/>saturated?"}
-  P -->|yes| Q["scale BOTH by the same factor<br/>curvature preserved, speed given up"]
+  N --> O["KINEMATICS - vL = v(1 - kb/2) - vR = v(1 + kb/2)"]
+  O --> P{"either wheel saturated?"}
+
+  P -->|yes| Q["scale BOTH by the same factor - curvature preserved, speed given up"]
   P -->|no| R["pass through"]
-  Q --> S["Deadband map<br/>0..1 -> 42..255 duty"]
+
+  Q --> S["Deadband map - 0..1 -> 42..255 duty"]
   R --> S
-  S --> T["analogWrite ENA / ENB<br/>digitalWrite IN1..IN4"]
-  T --> U["accumulate odometry<br/>+ 250 ms telemetry"]
+
+  S --> T["analogWrite ENA / ENB - digitalWrite IN1..IN4"]
+  T --> U["accumulate odometry - + 250 ms telemetry"]
   U --> Z
 
   classDef io fill:#E7F5EE,stroke:#1F7A4D,color:#125434
   classDef plan fill:#E8F0F8,stroke:#2C6FA8,color:#1B3A5C
   classDef act fill:#FFF4DC,stroke:#D9A118,color:#6B4E05
   classDef bad fill:#FCE9E8,stroke:#D5231F,color:#8E1512
+
   class D,E,F,H io
   class I,J,K,L,M,N plan
   class O,P,Q,R,S,T act
