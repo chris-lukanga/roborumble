@@ -1,0 +1,41 @@
+flowchart TB
+  subgraph POWER["POWER &amp; SAFETY CHAIN"]
+    B["2 x 9 V PP3 pack"] --> ES{{"E-STOP<br/>22 mm latching, NC"}}
+    ES --> SW{{"ON/OFF<br/>SPST rocker"}}
+    SW --> RAIL["V-motor rail 9 V"]
+    RAIL --> REG["L298N on-board<br/>5 V regulator"]
+  end
+
+  subgraph SENSE["SENSE"]
+    IR["5 x TCRT5000 reflective array<br/>20 mm pitch, 12 mm ride height"]
+    IR --> ADC["Uno ADC A0..A4<br/>200 Hz sweep"]
+  end
+
+  subgraph CONTROL["CONTROL - Arduino Uno R3, 200 Hz superloop"]
+    NORM["Per-channel normalisation"] --> CENT["Weighted centroid<br/>cross-track error e (m)"]
+    CENT --> PID["PID<br/>path curvature k (1/m)"]
+    PID --> SCHED["Speed schedule<br/>v (m/s)"]
+    SCHED --> KIN["Differential-drive kinematics"]
+    KIN --> SLEW["Slew limit + deadband map"]
+  end
+
+  subgraph ACT["ACTUATE"]
+    H["L298N dual H-bridge"] --> ML["TT gear motor L"]
+    H --> MR["TT gear motor R"]
+  end
+
+  REG --> ADC
+  RAIL --> H
+  ADC --> NORM
+  SLEW --> H
+  ML -.->|"the plant: the loop closes<br/>through the track surface"| IR
+  MR -.-> IR
+
+  classDef pwr fill:#FCE9E8,stroke:#D5231F,color:#8E1512
+  classDef ctl fill:#E8F0F8,stroke:#2C6FA8,color:#1B3A5C
+  classDef act fill:#FFF4DC,stroke:#D9A118,color:#6B4E05
+  classDef sen fill:#E7F5EE,stroke:#1F7A4D,color:#125434
+  class B,ES,SW,RAIL,REG pwr
+  class ADC,NORM,CENT,PID,SCHED,KIN,SLEW ctl
+  class H,ML,MR act
+  class IR sen

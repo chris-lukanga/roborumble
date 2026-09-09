@@ -1,0 +1,17 @@
+flowchart LR
+  BATT["BATTERY PACK<br/>2 x 9 V PP3"] -->|"+9 V"| FUSE["2 A resettable<br/>polyfuse"]
+  FUSE --> ESTOP{{"E-STOP<br/>22 mm latching mushroom<br/>NORMALLY CLOSED<br/>Universal Constraint 4"}}
+  ESTOP --> SW{{"ON/OFF<br/>SPST rocker<br/>Universal Constraint 3"}}
+  SW --> LED["Power-on LED"]
+  SW --> L298["L298N +12V terminal"]
+  L298 --> MOT["Motor outputs<br/>OUT1..OUT4"]
+  L298 --> REG5["On-board 78M05<br/>5 V logic rail"]
+  REG5 --> UNO["Arduino Uno 5V pin"]
+  UNO --> ARR["TCRT5000 array Vcc"]
+
+  ESTOP -.->|"OPEN when struck"| DEAD["EVERYTHING downstream<br/>loses power in the same instant:<br/>MCU, H-bridge, motors, sensors"]
+
+  classDef pwr fill:#FCE9E8,stroke:#D5231F,color:#8E1512,stroke-width:2px
+  classDef norm fill:#E8F0F8,stroke:#2C6FA8,color:#1B3A5C
+  class BATT,FUSE,ESTOP,SW,DEAD pwr
+  class LED,L298,MOT,REG5,UNO,ARR norm

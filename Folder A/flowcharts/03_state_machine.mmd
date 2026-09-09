@@ -1,0 +1,40 @@
+stateDiagram-v2
+  direction TB
+  [*] --> BOOT
+
+  BOOT: ST_BOOT
+  BOOT: motors commanded OFF first
+  BOOT: ADC self-test on all 5 channels
+
+  DISARMED: ST_DISARMED
+  DISARMED: motors coasting
+  DISARMED: LED slow blink 1 Hz
+
+  ARMED: ST_ARMED
+  ARMED: 3 s countdown
+  ARMED: LED fast blink
+  ARMED: controller state reset
+
+  RACING: ST_RACING
+  RACING: closed-loop line following
+  RACING: LED solid
+
+  FAULT: ST_FAULT
+  FAULT: motors coasting, latched
+  FAULT: LED urgent blink 5 Hz
+
+  BOOT --> DISARMED: self-test PASS
+  BOOT --> FAULT: self-test FAIL
+  DISARMED --> ARMED: ARM button
+  ARMED --> RACING: countdown expires
+  RACING --> FAULT: line lost > 2500 ms
+  RACING --> DISARMED: ARM pressed (soft abort, testing only)
+  FAULT --> DISARMED: ARM button (manual reset)
+
+  note right of RACING
+    The hardware E-STOP is deliberately
+    NOT a state here. It opens the battery
+    positive line, so it removes power from
+    the MCU and the H-bridge at once and
+    cannot be defeated by firmware.
+  end note

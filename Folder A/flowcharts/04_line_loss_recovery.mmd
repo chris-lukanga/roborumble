@@ -1,0 +1,20 @@
+flowchart TD
+  A["Line not detected<br/>total weight &lt; 0.35"] --> B["lostMs += dt"]
+  B --> C{"lostMs &gt; 2500 ms ?"}
+  C -->|yes| D["ST_FAULT<br/>coast, latch, urgent blink"]
+  C -->|no| E["k = clamp(lastKappa, +/- 7 1/m)<br/>hold the arc we were already on"]
+  E --> F{"lostMs &gt; 1200 ms ?"}
+  F -->|yes| G["v = 0.10 m/s<br/>halve the sweep speed"]
+  F -->|no| H["v = 0.20 m/s"]
+  G --> I["integral = 0<br/>never integrate blind"]
+  H --> I
+  I --> J["hand (v, k) to the<br/>slew limiter"]
+
+  K["Why forward, never reverse:<br/>the sensor bar leads the axle by 138 mm,<br/>so continuing the last arc sweeps it back<br/>across the line. Reversing on a shared<br/>track is how you cause a collision."]
+
+  classDef bad fill:#FCE9E8,stroke:#D5231F,color:#8E1512
+  classDef ok fill:#E8F0F8,stroke:#2C6FA8,color:#1B3A5C
+  classDef note fill:#F4F5F7,stroke:#98A0AA,color:#3C444E
+  class A,C,D bad
+  class E,F,G,H,I,J ok
+  class K note
